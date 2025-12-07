@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - Employee Records</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-header">
+    <h1>Employee Dashboard</h1>
+    <div class="version">Version {{ version }}</div>
+    <div class="hostname">Host: {{ hostname }}</div>
+    <div class="session-info">
+        <p>Visits this session: {{ visits }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ student['id'] }}</td>
+                <td>{{ student['name'] }}</td>
+                <td>{{ student['age'] }}</td>
+                <td><a href="mailto:{{ student['email'] }}">{{ student['email'] }}</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
+

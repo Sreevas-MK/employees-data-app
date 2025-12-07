@@ -1,0 +1,102 @@
+/* ===== Corporate Dashboard Theme ===== */
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Roboto", "Segoe UI", Tahoma, sans-serif;
+}
+
+body {
+    background: #eef1f4;
+    padding: 30px;
+    color: #2c3e50;
+}
+
+/* Header */
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.dashboard-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1e3c72;
+    margin-bottom: 5px;
+}
+
+.dashboard-header .version {
+    font-size: 18px;
+    font-weight: 500;
+    color: #34495e;
+}
+
+.dashboard-header .hostname {
+    font-size: 16px;
+    color: #2980b9;
+    margin-top: 4px;
+}
+
+/* Card Wrapper */
+.card {
+    width: 90%;
+    margin: 25px auto;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 14px;
+    border-bottom: 1px solid #dcdde1;
+    text-align: left;
+}
+
+th {
+    background: #1e3c72;
+    color: white;
+    font-size: 15px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+tr:hover {
+    background: #f0f6ff;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Email link */
+a[href^="mailto:"] {
+    color: #1e90ff;
+    text-decoration: none;
+}
+
+a[href^="mailto:"]:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card {
+        width: 100%;
+        padding: 15px;
+    }
+    
+    th, td {
+        padding: 10px;
+    }
+}
+
