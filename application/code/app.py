@@ -28,6 +28,10 @@ app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'supersecretkey')
 
 Session(app)  # initialize Flask-Session
 
+@app.route('/status')
+def health_check():
+    return 'ok',200
+
 @app.route('/')
 def message():
     try:
