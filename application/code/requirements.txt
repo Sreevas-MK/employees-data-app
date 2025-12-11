@@ -1,4 +1,6 @@
-flask
+Flask>=2.3
 mysql-connector-python
 redis
-Flask-Session
+flask-session
+gunicorn
+

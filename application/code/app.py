@@ -6,6 +6,36 @@ import json
 import redis
 from flask_session import Session
 
+def init_database():
+    try:
+        db = mysql.connector.connect(
+            host=os.getenv('DATABASE_HOST'),
+            user=os.getenv('DATABASE_USER'),
+            passwd=os.getenv('DATABASE_PASSWORD'),
+            port=int(os.getenv('DATABASE_PORT', 3306))
+        )
+        cursor = db.cursor()
+
+        # Create DB if missing
+        cursor.execute("CREATE DATABASE IF NOT EXISTS company")
+        cursor.execute("USE company")
+
+        # Create table if missing
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS employees (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100),
+                role VARCHAR(100)
+            )
+        """)
+
+        db.commit()
+        db.close()
+
+    except mysql.connector.Error as e:
+        print(f"DB Init Error: {e}", file=sys.stderr)
+
+
 app = Flask(__name__)
 
 # ---------------------------
@@ -100,6 +130,9 @@ if __name__ == '__main__':
     if missing_vars:
         print(f"Error: Missing required environment variables: {', '.join(missing_vars)}", file=sys.stderr)
         sys.exit(1)
+
+    print("Initializing database...")
+    init_database()
 
     hostname = os.getenv('HOSTNAME', None)
     database_host = os.getenv('DATABASE_HOST', None)
