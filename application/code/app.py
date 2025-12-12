@@ -25,7 +25,8 @@ def init_database():
             CREATE TABLE IF NOT EXISTS employees (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(100),
-                role VARCHAR(100)
+                age INT,
+                email VARCHAR(100)
             )
         """)
 

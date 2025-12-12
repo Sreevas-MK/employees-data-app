@@ -28,14 +28,22 @@
         </thead>
 
         <tbody>
-            {% for student in students %}
+            {% if students|length == 0 %}
             <tr>
-                <td>{{ student['id'] }}</td>
-                <td>{{ student['name'] }}</td>
-                <td>{{ student['age'] }}</td>
-                <td><a href="mailto:{{ student['email'] }}">{{ student['email'] }}</a></td>
+                <td colspan="4" style="text-align:center; padding:15px; font-weight:bold; color:#cc0000;">
+                    No employee records found! Please log in to the database and add entries.
+                </td>
             </tr>
-            {% endfor %}
+            {% else %}
+                {% for student in students %}
+                <tr>
+                    <td>{{ student['id'] }}</td>
+                    <td>{{ student['name'] }}</td>
+                    <td>{{ student['age'] }}</td>
+                    <td><a href="mailto:{{ student['email'] }}">{{ student['email'] }}</a></td>
+                </tr>
+                {% endfor %}
+            {% endif %}
         </tbody>
     </table>
 </div>
