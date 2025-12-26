@@ -11,16 +11,26 @@ def init_database():
         db = mysql.connector.connect(
             host=os.getenv('DATABASE_HOST'),
             user=os.getenv('DATABASE_USER'),
-            passwd=os.getenv('DATABASE_PASSWORD'),
+            password=os.getenv('DATABASE_PASSWORD'),
+            port=int(os.getenv('DATABASE_PORT', 3306)),
+        )
+
+        cursor = db.cursor()
+
+        # 2. Now create and use the database
+        cursor.execute("CREATE DATABASE IF NOT EXISTS company")
+        db.commit()
+        db.close() # Close this "server-level" connection
+
+        # 3. Re-connect specifically TO THE DATABASE
+        db = mysql.connector.connect(
+            host=os.getenv('DATABASE_HOST'),
+            user=os.getenv('DATABASE_USER'),
+            password=os.getenv('DATABASE_PASSWORD'),
+            database='company', # Connect directly to the schema
             port=int(os.getenv('DATABASE_PORT', 3306))
         )
         cursor = db.cursor()
-
-        # Create DB if missing
-        cursor.execute("CREATE DATABASE IF NOT EXISTS company")
-        cursor.execute("USE company")
-
-        # Create table if missing
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS employees (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,12 +39,15 @@ def init_database():
                 email VARCHAR(100)
             )
         """)
-
         db.commit()
-        db.close()
+        print("Database and Tables initialized successfully!")
 
     except mysql.connector.Error as e:
         print(f"DB Init Error: {e}", file=sys.stderr)
+
+    finally:
+        if db.is_connected():
+            db.close()
 
 
 app = Flask(__name__)
@@ -42,10 +55,17 @@ app = Flask(__name__)
 # ---------------------------
 # Redis Client (for caching)
 # ---------------------------
+
+def str_to_bool(v):
+    return str(v).lower() in ("yes", "true", "t", "1")
+
 redis_client = redis.Redis(
     host=os.getenv("REDIS_HOST", "redis"),
     port=int(os.getenv("REDIS_PORT", 6379)),
-    decode_responses=False
+    decode_responses=False,
+    ssl=str_to_bool(os.getenv("REDIS_SSL", "false")), 
+    ssl_cert_reqs=None,    
+    socket_timeout=5
 )
 
 # ---------------------------
