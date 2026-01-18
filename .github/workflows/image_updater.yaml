@@ -46,7 +46,7 @@ jobs:
       - name: Update Helm values.yaml
         run: |
           cd helm-temp
-          yq eval ".image.tag = \"${{ github.sha }}\"" -i values.yaml
+          yq eval ".flask.image.tag = \"${{ github.sha }}\"" -i values.yaml
           git config user.name "Sreevas-MK"
           git config user.email "sreevasmk@gmail.com"
           git add values.yaml
