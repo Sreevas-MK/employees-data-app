@@ -1,4 +1,4 @@
-# Employees data app
+# Employees Data Application ( Code Repository )
 
 This repository contains a complete **Flask-based web application stack** showing employees data, integrated with **MySQL** and **Redis**, designed to demonstrate backend application deployment and traffic management patterns.
 
