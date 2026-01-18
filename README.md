@@ -91,7 +91,6 @@ docker network create flaskapp-network
 
 This network allows containers to communicate with each other.
 
----
 
 ### MySQL Setup
 
@@ -142,7 +141,6 @@ CREATE USER 'appadmin'@'%' IDENTIFIED BY 'your_database_password';
 GRANT ALL PRIVILEGES ON company.* TO 'appadmin'@'%';
 FLUSH PRIVILEGES;
 ```
----
 
 ### Redis Setup
 
@@ -152,7 +150,6 @@ docker run -d --name redis-container --network flaskapp-network -p 6379:6379 red
 
 Redis is used for caching and session stickiness.
 
----
 
 ### Run Flask Containers
 
@@ -191,123 +188,7 @@ docker run -d --name flaskapp-container2 --network flaskapp-network \
 3. Expose Nginx on port 80.
 4. Requests are balanced between Flask containers.
 
-```bash
-docker run -d --name nginx-lb \
-  --network flaskapp-network \
-  -p 8080:80 \
-  -v $PWD/nginx.conf:/etc/nginx/nginx.conf:ro \
-  nginx:alpine
-```
-
-#### Option 2: AWS Application Load Balancer (ALB)
-
-1. Create Target Group pointing to Flask container ports.
-2. Attach EC2 instances or container instances running Flask.
-3. Configure health check as `/status`.
-4. Attach Target Group to ALB.
-
----
-
-#### Notes
-
-* Make sure environment variables for MySQL, Redis, and Flask are correctly set.
-* Health check endpoint helps Nginx or ALB monitor container health.
-* Docker Hub image ensures consistent deployment without rebuilding locally.
-* Manual deployment validates everything before automating with Ansible or Terraform.
-
----
-
-### AWS Application Load Balancer (ALB) & Domain Setup
-
-This guide explains how to set up an AWS Application Load Balancer (ALB) and configure a domain/subdomain via Route 53 for the Flask MySQL Redis application running on EC2 instances.
-
-#### Step 1: Create Target Group
-
-1. Navigate to **EC2 → Target Groups → Create target group**.
-
-2. Select:
-
-   * Target group name
-   * Protocol
-   * IP address type
-   * VPC
-     ![Target Group](images/target-group-1.png)
-
-3. Configure health checks:
-
-   * Path: `/status`
-     ![Health Check](images/target-group-2.png)
-
-4. Add tags as required.
-   ![Tags](images/target-group-3.png)
-
-5. Select targets (EC2/container instances) and map to Flask container ports **3001** and **3002**:
-   ![Target Mapping 1](images/target-group-4.png)
-   ![Target Mapping 2](images/target-group-5.png)
-   ![Target Mapping 3](images/target-group-6.png)
-
-6. Click **Next** and **Create Target Group**.
-
-#### Step 2: Create Application Load Balancer (ALB)
-
-1. Navigate to **EC2 → Load Balancers → Create Load Balancer → Application Load Balancer**.
-
-2. Provide:
-
-   * Name
-   * VPC
-   * Subnets and Availability Zones (select at least 2, e.g., `ap-south-1a` and `ap-south-1b`)
-     ![Load Balancer Step 1](images/Load-balancer-1.png)
-     ![Load Balancer Step 2](images/Load-balancer-2.png)
-
-3. Configure listeners:
-
-   * HTTPS listener
-     ![HTTPS Listener](images/Load-balancer-3.png)
-   * Select the target group created earlier
-   * Choose ACM certificate for SSL
-     ![ACM Certificate](images/Load-balancer-4.png)
-
-4. Configure HTTP listener to redirect traffic to HTTPS
-   ![HTTP Redirect](images/Load-balancer-5.png)
-
-5. Review and click **Create Load Balancer**.
-
-
-#### Step 3: Add Route 53 Record
-
-1. Open **Route 53 → Hosted zones → Select domain/subdomain**.
-
-2. Create a new record:
-
-   * Type: **A (Alias)**
-   * Alias Target: select the ALB created in Step 2
-     ![Route 53 Record](images/Route-53.png)
-
-3. Save the record. The domain/subdomain now points to the ALB.
-
-#### Step 4: Verify Application
-
-1. Open the browser and navigate to your domain/subdomain.
-2. You should see the Flask MySQL Redis application running.
-
-![Application Screenshot 1](images/Application-image-1.png)
-![Application Screenshot 2](images/Application-image-2.png)
-
-### Notes
-
-* Ensure that EC2 instances running Flask containers are registered with the target group.
-* Health checks `/status` ensure ALB routes traffic only to healthy instances.
-* Route 53 alias allows users to access the site via a custom domain.
-* Manual deployment ensures proper testing before automating with tools like Terraform or Ansible.
-
----
-
-### Nginx Load Balancer Setup
-
-This guide explains how to configure Nginx as a load balancer for the Flask MySQL Redis application.
-
-#### nginx.conf
+##### nginx.conf
 
 ```nginx
 events {}
@@ -335,7 +216,7 @@ http {
 * Nginx will forward requests to `flaskapp-container1` and `flaskapp-container2` on port 3000.
 * Proxy headers preserve client information.
 
-#### Run Nginx Container
+##### Run Nginx Container
 
 ```bash
 docker run -d --name nginx-lb \
@@ -349,18 +230,112 @@ docker run -d --name nginx-lb \
 * `-p 8080:80` exposes Nginx on host port 8080.
 * `-v $PWD/files/nginx.conf:/etc/nginx/nginx.conf:ro` mounts the configuration file as read-only.
 
----
-
-### Access the Application
+##### Access the Application
 
 * Open a browser and navigate to `http://<host-ip>:8080/`.
 * Requests will be distributed between the two Flask containers automatically.
 
-### Notes
 
-* Ensure both Flask containers (`flaskapp-container1` and `flaskapp-container2`) are running before starting Nginx.
-* Nginx acts as a simple reverse proxy and load balancer.
-* For production, consider enabling SSL and monitoring container health.
+##### Notes
+ * Ensure both Flask containers (`flaskapp-container1` and `flaskapp-container2`) are running before starting Nginx.
+ * Nginx acts as a simple reverse proxy and load balancer.
+ * For production, consider enabling SSL and monitoring container health.
+
+---
+
+#### Option 2: AWS Application Load Balancer (ALB)
+
+1. Create Target Group pointing to Flask container ports.
+2. Attach EC2 instances or container instances running Flask.
+3. Configure health check as `/status`.
+4. Attach Target Group to ALB.
+
+##### Notes
+
+ * Make sure environment variables for MySQL, Redis, and Flask are correctly set.
+ * Health check endpoint helps Nginx or ALB monitor container health.
+ * Docker Hub image ensures consistent deployment without rebuilding locally.
+ * Manual deployment validates everything before automating with Ansible or Terraform.
+
+##### Step 1: Create Target Group
+
+1. Navigate to **EC2 → Target Groups → Create target group**.
+
+2. Select:
+
+   * Target group name
+   * Protocol
+   * IP address type
+   * VPC
+     ![Target Group](images/target-group-1.png)
+
+3. Configure health checks:
+
+   * Path: `/status`
+     ![Health Check](images/target-group-2.png)
+
+4. Add tags as required.
+   ![Tags](images/target-group-3.png)
+
+5. Select targets (EC2/container instances) and map to Flask container ports **3001** and **3002**:
+   ![Target Mapping 1](images/target-group-4.png)
+   ![Target Mapping 2](images/target-group-5.png)
+   ![Target Mapping 3](images/target-group-6.png)
+
+6. Click **Next** and **Create Target Group**.
+
+##### Step 2: Create Application Load Balancer (ALB)
+
+1. Navigate to **EC2 → Load Balancers → Create Load Balancer → Application Load Balancer**.
+
+2. Provide:
+
+   * Name
+   * VPC
+   * Subnets and Availability Zones (select at least 2, e.g., `ap-south-1a` and `ap-south-1b`)
+     ![Load Balancer Step 1](images/Load-balancer-1.png)
+     ![Load Balancer Step 2](images/Load-balancer-2.png)
+
+3. Configure listeners:
+
+   * HTTPS listener
+     ![HTTPS Listener](images/Load-balancer-3.png)
+   * Select the target group created earlier
+   * Choose ACM certificate for SSL
+     ![ACM Certificate](images/Load-balancer-4.png)
+
+4. Configure HTTP listener to redirect traffic to HTTPS
+   ![HTTP Redirect](images/Load-balancer-5.png)
+
+5. Review and click **Create Load Balancer**.
+
+
+##### Step 3: Add Route 53 Record
+
+1. Open **Route 53 → Hosted zones → Select domain/subdomain**.
+
+2. Create a new record:
+
+   * Type: **A (Alias)**
+   * Alias Target: select the ALB created in Step 2
+     ![Route 53 Record](images/Route-53.png)
+
+3. Save the record. The domain/subdomain now points to the ALB.
+
+##### Step 4: Verify Application
+
+1. Open the browser and navigate to your domain/subdomain.
+2. You should see the Flask MySQL Redis application running.
+
+![Application Screenshot 1](images/Application-image-1.png)
+![Application Screenshot 2](images/Application-image-2.png)
+
+#### Notes
+
+ * Ensure that EC2 instances running Flask containers are registered with the target group.
+ * Health checks `/status` ensure ALB routes traffic only to healthy instances.
+ * Route 53 alias allows users to access the site via a custom domain.
+ * Manual deployment ensures proper testing before automating with tools like Terraform or Ansible.
 
 ---
 
@@ -375,5 +350,3 @@ Infrastructure provisioning using Terraform
 Production-grade EKS or ECS environments
 
 The current manual deployment steps act as a **baseline reference**, ensuring full understanding of how each component works before automation is introduced.
-
----
