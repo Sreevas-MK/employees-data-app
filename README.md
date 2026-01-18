@@ -35,17 +35,6 @@ Multiple Flask containers are deployed to simulate horizontal scaling.
 Traffic is distributed using either **Nginx** or **AWS Application Load Balancer (ALB)**.
 The application is exposed via a custom domain using **Route 53** and **HTTPS**.
 
-This application is **not limited to manual deployment only**.
-It is designed so the same application and configuration can later be used with:
-
-Helm charts for Kubernetes deployments
-GitOps workflows (ArgoCD / Flux)
-CI/CD pipelines (GitHub Actions)
-Infrastructure provisioning using Terraform
-Production-grade EKS or ECS environments
-
-The current manual deployment steps act as a **baseline reference**, ensuring full understanding of how each component works before automation is introduced.
-
 ---
 
 ## Repository Structure
@@ -94,7 +83,7 @@ Route 53 DNS-based access
 
 This guide explains how to manually deploy the Flask MySQL Redis application using the Docker image from Docker Hub.
 
-## Create Docker Network
+### Create Docker Network
 
 ```bash
 docker network create flaskapp-network
@@ -104,7 +93,7 @@ This network allows containers to communicate with each other.
 
 ---
 
-## MySQL Setup
+### MySQL Setup
 
 1. Pull MySQL image:
 
@@ -153,10 +142,9 @@ CREATE USER 'appadmin'@'%' IDENTIFIED BY 'your_database_password';
 GRANT ALL PRIVILEGES ON company.* TO 'appadmin'@'%';
 FLUSH PRIVILEGES;
 ```
-
 ---
 
-## Redis Setup
+### Redis Setup
 
 ```bash
 docker run -d --name redis-container --network flaskapp-network -p 6379:6379 redis:alpine
@@ -166,15 +154,15 @@ Redis is used for caching and session stickiness.
 
 ---
 
-## Run Flask Containers
+### Run Flask Containers
 
-### Pull Docker Image from Docker Hub
+#### Pull Docker Image from Docker Hub
 
 ```bash
 docker image pull sreevasmk1993/flask-mysql-redis-app:latest
 ```
 
-### Run Containers
+#### Run Containers
 
 ```bash
 docker run -d --name flaskapp-container1 --network flaskapp-network \
@@ -194,9 +182,9 @@ docker run -d --name flaskapp-container2 --network flaskapp-network \
 
 ---
 
-## Load Balancing
+### Load Balancing
 
-### Option 1: Nginx Container
+#### Option 1: Nginx Container
 
 1. Use the `nginx.conf` in `nginx-container/`.
 2. Configure upstream servers for ports 3001 and 3002.
@@ -211,7 +199,7 @@ docker run -d --name nginx-lb \
   nginx:alpine
 ```
 
-### Option 2: AWS Application Load Balancer (ALB)
+#### Option 2: AWS Application Load Balancer (ALB)
 
 1. Create Target Group pointing to Flask container ports.
 2. Attach EC2 instances or container instances running Flask.
@@ -220,21 +208,20 @@ docker run -d --name nginx-lb \
 
 ---
 
-## Notes
+#### Notes
 
 * Make sure environment variables for MySQL, Redis, and Flask are correctly set.
 * Health check endpoint helps Nginx or ALB monitor container health.
 * Docker Hub image ensures consistent deployment without rebuilding locally.
 * Manual deployment validates everything before automating with Ansible or Terraform.
 
+---
 
-# AWS Application Load Balancer (ALB) & Domain Setup
+### AWS Application Load Balancer (ALB) & Domain Setup
 
 This guide explains how to set up an AWS Application Load Balancer (ALB) and configure a domain/subdomain via Route 53 for the Flask MySQL Redis application running on EC2 instances.
 
----
-
-## Step 1: Create Target Group
+#### Step 1: Create Target Group
 
 1. Navigate to **EC2 → Target Groups → Create target group**.
 
@@ -261,9 +248,7 @@ This guide explains how to set up an AWS Application Load Balancer (ALB) and con
 
 6. Click **Next** and **Create Target Group**.
 
----
-
-## Step 2: Create Application Load Balancer (ALB)
+#### Step 2: Create Application Load Balancer (ALB)
 
 1. Navigate to **EC2 → Load Balancers → Create Load Balancer → Application Load Balancer**.
 
@@ -288,9 +273,8 @@ This guide explains how to set up an AWS Application Load Balancer (ALB) and con
 
 5. Review and click **Create Load Balancer**.
 
----
 
-## Step 3: Add Route 53 Record
+#### Step 3: Add Route 53 Record
 
 1. Open **Route 53 → Hosted zones → Select domain/subdomain**.
 
@@ -302,9 +286,7 @@ This guide explains how to set up an AWS Application Load Balancer (ALB) and con
 
 3. Save the record. The domain/subdomain now points to the ALB.
 
----
-
-## Step 4: Verify Application
+#### Step 4: Verify Application
 
 1. Open the browser and navigate to your domain/subdomain.
 2. You should see the Flask MySQL Redis application running.
@@ -312,9 +294,7 @@ This guide explains how to set up an AWS Application Load Balancer (ALB) and con
 ![Application Screenshot 1](images/Application-image-1.png)
 ![Application Screenshot 2](images/Application-image-2.png)
 
----
-
-## Notes
+### Notes
 
 * Ensure that EC2 instances running Flask containers are registered with the target group.
 * Health checks `/status` ensure ALB routes traffic only to healthy instances.
@@ -323,13 +303,11 @@ This guide explains how to set up an AWS Application Load Balancer (ALB) and con
 
 ---
 
-# Nginx Load Balancer Setup
+### Nginx Load Balancer Setup
 
 This guide explains how to configure Nginx as a load balancer for the Flask MySQL Redis application.
 
----
-
-## nginx.conf
+#### nginx.conf
 
 ```nginx
 events {}
@@ -357,9 +335,7 @@ http {
 * Nginx will forward requests to `flaskapp-container1` and `flaskapp-container2` on port 3000.
 * Proxy headers preserve client information.
 
----
-
-## Run Nginx Container
+#### Run Nginx Container
 
 ```bash
 docker run -d --name nginx-lb \
@@ -375,17 +351,29 @@ docker run -d --name nginx-lb \
 
 ---
 
-## Access the Application
+### Access the Application
 
 * Open a browser and navigate to `http://<host-ip>:8080/`.
 * Requests will be distributed between the two Flask containers automatically.
 
----
-
-## Notes
+### Notes
 
 * Ensure both Flask containers (`flaskapp-container1` and `flaskapp-container2`) are running before starting Nginx.
 * Nginx acts as a simple reverse proxy and load balancer.
 * For production, consider enabling SSL and monitoring container health.
+
+---
+
+## Conclusion
+
+This application is **not limited to manual deployment only**. It is designed so the same application and configuration can later be used with:
+
+Helm charts for Kubernetes deployments
+GitOps workflows (ArgoCD / Flux)
+CI/CD pipelines (GitHub Actions)
+Infrastructure provisioning using Terraform
+Production-grade EKS or ECS environments
+
+The current manual deployment steps act as a **baseline reference**, ensuring full understanding of how each component works before automation is introduced.
 
 ---
