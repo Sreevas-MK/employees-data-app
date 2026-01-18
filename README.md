@@ -1,19 +1,98 @@
-# Manual Deployment Guide
+# Employees data app
 
-This guide explains how to manually deploy the Flask MySQL Redis application using the Docker image from Docker Hub.
+This repository contains a complete **Flask-based web application stack** showing employees data, integrated with **MySQL** and **Redis**, designed to demonstrate backend application deployment and traffic management patterns.
+
+The primary goal of this repository is to serve as a **foundation project** that can be deployed manually first for learning and validation, and later extended into **container orchestration and infrastructure-as-code workflows**.
 
 ---
 
 ## Table of Contents
 
-1. [Create Docker Network](#create-docker-network)
-2. [MySQL Setup](#mysql-setup)
-3. [Redis Setup](#redis-setup)
-4. [Run Flask Containers](#run-flask-containers)
-5. [Load Balancing](#load-balancing)
-6. [Notes](#notes)
+1. [Project Overview](#overview)
+
+2. [Repository Structure](#repository-structure)
+
+3. [Application Layer](#application-layer)
+
+4. [Deployment Approaches Covered](#deployment-approaches-covered)
+
+5. [Manual Deployment Guide](#manual-deployment-guide)
+
+6. [Load Balancing](#load-balancing)
+
+7. [AWS ALB and Domain Setup](#aws-application-load-balancer-alb--domain-setup)
+
+8. [Nginx Load Balancer Setup](#nginx-load-balancer-setup)
+
+9. [Notes and Future Scope](#notes)
 
 ---
+
+## Overview
+
+The Flask application connects to a MySQL database for persistent data storage and uses Redis for caching and session handling.
+Multiple Flask containers are deployed to simulate horizontal scaling.
+Traffic is distributed using either **Nginx** or **AWS Application Load Balancer (ALB)**.
+The application is exposed via a custom domain using **Route 53** and **HTTPS**.
+
+This application is **not limited to manual deployment only**.
+It is designed so the same application and configuration can later be used with:
+
+Helm charts for Kubernetes deployments
+GitOps workflows (ArgoCD / Flux)
+CI/CD pipelines (GitHub Actions)
+Infrastructure provisioning using Terraform
+Production-grade EKS or ECS environments
+
+The current manual deployment steps act as a **baseline reference**, ensuring full understanding of how each component works before automation is introduced.
+
+---
+
+## Repository Structure
+
+This repository is organized to separate **application development** from **deployment and infrastructure concerns**.
+
+The `application/` directory contains the actual Flask application source code, Dockerfile, and application-specific documentation.
+
+The root directory focuses on deployment guides, load balancing, cloud integration, and architecture validation.
+
+This separation allows the same application to be reused across Docker, Nginx, ALB, Kubernetes, and Helm-based deployments.
+
+---
+
+## Application Layer
+
+The `application/` directory is where the **core development work happens**.
+
+It contains:
+
+* Flask application source code
+* HTML templates and static assets
+* Python dependencies
+* Dockerfile used to build the application image
+
+This design allows the application to be developed, tested, and containerized independently from the deployment strategy.
+
+For application-level details, refer to:
+
+```
+application/README.md
+```
+
+---
+
+## Deployment Approaches Covered
+
+Local or EC2-based Docker deployment
+Nginx-based container load balancing
+AWS Application Load Balancer with Target Groups
+Route 53 DNS-based access
+
+---
+
+## Manual Deployment Guide
+
+This guide explains how to manually deploy the Flask MySQL Redis application using the Docker image from Docker Hub.
 
 ## Create Docker Network
 
@@ -43,7 +122,7 @@ docker volume create mysql-volume
 
 ```bash
 docker run --name mysql-container -d --network flaskapp-network \
-  -e MYSQL_ROOT_PASSWORD="A9mQ2#vT7&kH6@" \
+  -e MYSQL_ROOT_PASSWORD="your_mysql_root_password" \
   -v mysql-volume:/var/lib/mysql mysql:latest
 ```
 
@@ -70,7 +149,7 @@ INSERT INTO employees (id,name,age,email) VALUES
 (102,"Christy",26,"christy@gmail.com"),
 (103,"Emily",30,"emily@gmail.com");
 
-CREATE USER 'appadmin'@'%' IDENTIFIED BY 'T8#cReP9hV6*uQ';
+CREATE USER 'appadmin'@'%' IDENTIFIED BY 'your_database_password';
 GRANT ALL PRIVILEGES ON company.* TO 'appadmin'@'%';
 FLUSH PRIVILEGES;
 ```
@@ -100,14 +179,14 @@ docker image pull sreevasmk1993/flask-mysql-redis-app:latest
 ```bash
 docker run -d --name flaskapp-container1 --network flaskapp-network \
   -e DATABASE_HOST="mysql-container" -e DATABASE_PORT=3306 \
-  -e DATABASE_USER="appadmin" -e DATABASE_PASSWORD="T8#cReP9hV6*uQ" \
+  -e DATABASE_USER="appadmin" -e DATABASE_PASSWORD="your_database_password" \
   -e DATABASE_NAME="company" -e DATABASE_TABLE="employees" \
   -e FLASK_PORT=3000 -e REDIS_HOST="redis-container" -e REDIS_PORT=6379 \
   -p 3001:3000 sreevasmk1993/flask-mysql-redis-app:latest
 
 docker run -d --name flaskapp-container2 --network flaskapp-network \
   -e DATABASE_HOST="mysql-container" -e DATABASE_PORT=3306 \
-  -e DATABASE_USER="appadmin" -e DATABASE_PASSWORD="T8#cReP9hV6*uQ" \
+  -e DATABASE_USER="appadmin" -e DATABASE_PASSWORD="your_database_password" \
   -e DATABASE_NAME="company" -e DATABASE_TABLE="employees" \
   -e FLASK_PORT=3000 -e REDIS_HOST="redis-container" -e REDIS_PORT=6379 \
   -p 3002:3000 sreevasmk1993/flask-mysql-redis-app:latest
@@ -152,16 +231,6 @@ docker run -d --name nginx-lb \
 # AWS Application Load Balancer (ALB) & Domain Setup
 
 This guide explains how to set up an AWS Application Load Balancer (ALB) and configure a domain/subdomain via Route 53 for the Flask MySQL Redis application running on EC2 instances.
-
----
-
-## Folder Structure
-
-```
-aws-alb/
-├── README.md
-└── images/
-```
 
 ---
 
@@ -260,15 +329,6 @@ This guide explains how to configure Nginx as a load balancer for the Flask MySQ
 
 ---
 
-## Folder Structure
-
-```
-nginx-container/
-└── nginx.conf
-```
-
----
-
 ## nginx.conf
 
 ```nginx
@@ -305,13 +365,13 @@ http {
 docker run -d --name nginx-lb \
   --network flaskapp-network \
   -p 8080:80 \
-  -v $PWD/nginx.conf:/etc/nginx/nginx.conf:ro \
+  -v $PWD/files/nginx.conf:/etc/nginx/nginx.conf:ro \
   nginx:alpine
 ```
 
 * `--network flaskapp-network` ensures Nginx can reach the Flask containers.
 * `-p 8080:80` exposes Nginx on host port 8080.
-* `-v $PWD/nginx.conf:/etc/nginx/nginx.conf:ro` mounts the configuration file as read-only.
+* `-v $PWD/files/nginx.conf:/etc/nginx/nginx.conf:ro` mounts the configuration file as read-only.
 
 ---
 
