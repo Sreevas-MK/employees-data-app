@@ -8,23 +8,14 @@ The primary goal of this repository is to serve as a **foundation project** that
 
 ## Table of Contents
 
-1. [Project Overview](#overview)
-
-2. [Repository Structure](#repository-structure)
-
-3. [Application Layer](#application-layer)
-
-4. [Deployment Approaches Covered](#deployment-approaches-covered)
-
-5. [Manual Deployment Guide](#manual-deployment-guide)
-
-6. [Load Balancing](#load-balancing)
-
-7. [AWS ALB and Domain Setup](#aws-application-load-balancer-alb--domain-setup)
-
-8. [Nginx Load Balancer Setup](#nginx-load-balancer-setup)
-
-9. [Notes and Future Scope](#notes)
+- [Overview](#overview)
+- [Repository Structure](#repository-structure)
+- [Application Layer](#application-layer)
+- [Deployment Approaches Covered](#deployment-approaches-covered)
+- [Manual Deployment Guide](#manual-deployment-guide)
+- [Load Balancing](#load-balancing)
+- [CI/CD Automation with GitHub Actions](#cicd-automation-with-github-actions)
+- [Conclusion](#conclusion)
 
 ---
 
@@ -336,6 +327,21 @@ docker run -d --name nginx-lb \
  * Health checks `/status` ensure ALB routes traffic only to healthy instances.
  * Route 53 alias allows users to access the site via a custom domain.
  * Manual deployment ensures proper testing before automating with tools like Terraform or Ansible.
+
+---
+
+## CI/CD Automation with GitHub Actions
+
+This repository uses a GitHub Actions workflow to automate Docker image builds and Helm chart updates.
+
+The workflow triggers **only when application code changes** inside the `application/` directory and ignores documentation-only updates such as `application/README.md`.
+
+On every valid change, the pipeline:
+- Builds a Docker image using `application/Dockerfile`
+- Pushes the image to Docker Hub with `latest` and commit-based tags
+- Updates the image tag in the Helm repository automatically
+
+This enables a clean GitOps-style workflow where application changes flow seamlessly into Kubernetes deployments without manual intervention.
 
 ---
 

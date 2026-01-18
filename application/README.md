@@ -116,5 +116,4 @@ docker image push sreevasmk1993/employees-data-app:latest
 | REDIS_PORT        | 6379           | Redis port       |
 | FLASK_SECRET_KEY  | supersecretkey | Flask secret key |
 
-This image can now be used to run multiple Flask containers for load balancing with Nginx or AWS ALB.
-
+This Docker image is reusable across standalone Docker setups, Nginx or AWS ALB load balancing, and Kubernetes environments including Helm-based deployments.
