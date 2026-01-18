@@ -7,7 +7,7 @@ The primary goal of this repository is to serve as a **foundation project** that
 ---
 
 <p align="center">
-  <img src="./images/Employees-app-code-deployment.png" alt="Application repo flow" width="500">
+  <img src="./images/Employees-app-code-deployment-updated.png" alt="Application repo flow" width="500">
 </p>
 
 ## Table of Contents
