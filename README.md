@@ -156,7 +156,7 @@ Redis is used for caching and session stickiness.
 Pull Docker Image from Docker Hub
 
 ```bash
-docker image pull sreevasmk1993/flask-mysql-redis-app:latest
+docker image pull sreevasmk1993/employees-data-app:latest
 ```
 
 Run Containers
@@ -167,14 +167,14 @@ docker run -d --name flaskapp-container1 --network flaskapp-network \
   -e DATABASE_USER="appadmin" -e DATABASE_PASSWORD="your_database_password" \
   -e DATABASE_NAME="company" -e DATABASE_TABLE="employees" \
   -e FLASK_PORT=3000 -e REDIS_HOST="redis-container" -e REDIS_PORT=6379 \
-  -p 3001:3000 sreevasmk1993/flask-mysql-redis-app:latest
+  -p 3001:3000 sreevasmk1993/employees-data-app:latest
 
 docker run -d --name flaskapp-container2 --network flaskapp-network \
   -e DATABASE_HOST="mysql-container" -e DATABASE_PORT=3306 \
   -e DATABASE_USER="appadmin" -e DATABASE_PASSWORD="your_database_password" \
   -e DATABASE_NAME="company" -e DATABASE_TABLE="employees" \
   -e FLASK_PORT=3000 -e REDIS_HOST="redis-container" -e REDIS_PORT=6379 \
-  -p 3002:3000 sreevasmk1993/flask-mysql-redis-app:latest
+  -p 3002:3000 sreevasmk1993/employees-data-app:latest
 ```
 
 ---

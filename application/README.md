@@ -1,4 +1,4 @@
-# Flask MySQL Redis Application
+# Employees data app - Application Layer
 
 This folder contains the Flask application along with Dockerfile and source code.
 The app uses MySQL for persistent storage, Redis for caching and session stickiness, and is fully Dockerized.
@@ -84,19 +84,19 @@ docker image build -t flask-mysql-redis-app .
 ### Tag for Docker Hub
 
 ```bash
-docker image tag flask-mysql-redis-app sreevasmk1993/flask-mysql-redis-app:latest
+docker image tag flask-mysql-redis-app sreevasmk1993/employees-data-app:latest
 ```
 
 ### Push to Docker Hub
 
 ```bash
-docker image push sreevasmk1993/flask-mysql-redis-app:latest
+docker image push sreevasmk1993/employees-data-app:latest
 ```
 
 > After this, the image is available on Docker Hub and can be pulled directly using:
 >
 > ```bash
-> docker pull sreevasmk1993/flask-mysql-redis-app:latest
+> docker pull sreevasmk1993/employees-data-app:latest
 > ```
 
 ---
