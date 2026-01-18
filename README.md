@@ -153,13 +153,13 @@ Redis is used for caching and session stickiness.
 
 ### Run Flask Containers
 
-#### Pull Docker Image from Docker Hub
+Pull Docker Image from Docker Hub
 
 ```bash
 docker image pull sreevasmk1993/flask-mysql-redis-app:latest
 ```
 
-#### Run Containers
+Run Containers
 
 ```bash
 docker run -d --name flaskapp-container1 --network flaskapp-network \
@@ -179,16 +179,16 @@ docker run -d --name flaskapp-container2 --network flaskapp-network \
 
 ---
 
-### Load Balancing
+## Load Balancing
 
-#### Option 1: Nginx Container
+### Option 1: Nginx Container
 
 1. Use the `nginx.conf` in `nginx-container/`.
 2. Configure upstream servers for ports 3001 and 3002.
 3. Expose Nginx on port 80.
 4. Requests are balanced between Flask containers.
 
-##### nginx.conf
+*nginx.conf*
 
 ```nginx
 events {}
@@ -216,7 +216,7 @@ http {
 * Nginx will forward requests to `flaskapp-container1` and `flaskapp-container2` on port 3000.
 * Proxy headers preserve client information.
 
-##### Run Nginx Container
+#### Run Nginx Container
 
 ```bash
 docker run -d --name nginx-lb \
@@ -230,34 +230,34 @@ docker run -d --name nginx-lb \
 * `-p 8080:80` exposes Nginx on host port 8080.
 * `-v $PWD/files/nginx.conf:/etc/nginx/nginx.conf:ro` mounts the configuration file as read-only.
 
-##### Access the Application
+#### Access the Application
 
 * Open a browser and navigate to `http://<host-ip>:8080/`.
 * Requests will be distributed between the two Flask containers automatically.
 
 
-##### Notes
+#### Notes
  * Ensure both Flask containers (`flaskapp-container1` and `flaskapp-container2`) are running before starting Nginx.
  * Nginx acts as a simple reverse proxy and load balancer.
  * For production, consider enabling SSL and monitoring container health.
 
 ---
 
-#### Option 2: AWS Application Load Balancer (ALB)
+### Option 2: AWS Application Load Balancer (ALB)
 
 1. Create Target Group pointing to Flask container ports.
 2. Attach EC2 instances or container instances running Flask.
 3. Configure health check as `/status`.
 4. Attach Target Group to ALB.
 
-##### Notes
+#### Notes
 
  * Make sure environment variables for MySQL, Redis, and Flask are correctly set.
  * Health check endpoint helps Nginx or ALB monitor container health.
  * Docker Hub image ensures consistent deployment without rebuilding locally.
  * Manual deployment validates everything before automating with Ansible or Terraform.
 
-##### Step 1: Create Target Group
+#### Step 1: Create Target Group
 
 1. Navigate to **EC2 → Target Groups → Create target group**.
 
@@ -284,7 +284,7 @@ docker run -d --name nginx-lb \
 
 6. Click **Next** and **Create Target Group**.
 
-##### Step 2: Create Application Load Balancer (ALB)
+#### Step 2: Create Application Load Balancer (ALB)
 
 1. Navigate to **EC2 → Load Balancers → Create Load Balancer → Application Load Balancer**.
 
@@ -310,7 +310,7 @@ docker run -d --name nginx-lb \
 5. Review and click **Create Load Balancer**.
 
 
-##### Step 3: Add Route 53 Record
+#### Step 3: Add Route 53 Record
 
 1. Open **Route 53 → Hosted zones → Select domain/subdomain**.
 
@@ -322,7 +322,7 @@ docker run -d --name nginx-lb \
 
 3. Save the record. The domain/subdomain now points to the ALB.
 
-##### Step 4: Verify Application
+#### Step 4: Verify Application
 
 1. Open the browser and navigate to your domain/subdomain.
 2. You should see the Flask MySQL Redis application running.
@@ -330,7 +330,7 @@ docker run -d --name nginx-lb \
 ![Application Screenshot 1](images/Application-image-1.png)
 ![Application Screenshot 2](images/Application-image-2.png)
 
-#### Notes
+### Notes
 
  * Ensure that EC2 instances running Flask containers are registered with the target group.
  * Health checks `/status` ensure ALB routes traffic only to healthy instances.
