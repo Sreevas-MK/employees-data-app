@@ -3,4 +3,6 @@ mysql-connector-python
 redis
 flask-session
 gunicorn
-
+jaraco.context==6.1.0
+pip==25.3
+wheel==0.46.2

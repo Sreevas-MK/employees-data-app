@@ -27,25 +27,49 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./application
-          file: ./application/Dockerfile
-          push: true
-          tags: | 
-            sreevasmk1993/employees-data-app:latest
-            sreevasmk1993/employees-data-app:${{ github.sha }}
-
-
-      - name: Clone Helm repo
+      - name: Build Docker image
         run: |
-          git clone https://x-access-token:${{ secrets.ACCESS_TOKEN }}@github.com/Sreevas-MK/employees-data-app-eks-helm.git helm-temp
+          docker build -t sreevasmk1993/employees-data-app:${{ github.sha }} ./application
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          image-ref: sreevasmk1993/employees-data-app:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: 1
+          format: table
+
+      - name: Push Docker image
+        run: |
+          docker tag sreevasmk1993/employees-data-app:${{ github.sha }} sreevasmk1993/employees-data-app:latest
+          docker push sreevasmk1993/employees-data-app:${{ github.sha }}
+          docker push sreevasmk1993/employees-data-app:latest
+
+
+      - name: Clone Helm repo for EKS helm charts
+        run: |
+          git clone https://x-access-token:${{ secrets.EKS_HELM_TOKEN }}@github.com/Sreevas-MK/employees-data-app-eks-helm.git helm-prod
         shell: bash
 
       - name: Update Helm values.yaml
         run: |
-          cd helm-temp
+          cd helm-prod
+          yq eval ".flask.image.tag = \"${{ github.sha }}\"" -i values.yaml
+          git config user.name "Sreevas-MK"
+          git config user.email "sreevasmk@gmail.com"
+          git add values.yaml
+          git commit -m "Updated the docker image tag to ${{ github.sha }}"
+          git push origin main
+        shell: bash
+
+      - name: Clone Helm repo for Dev helm charts
+        run: |
+          git clone https://x-access-token:${{ secrets.DEV_HELM_TOKEN }}@github.com/Sreevas-MK/employees-data-app-helm-dev-infra.git helm-dev
+        shell: bash
+
+      - name: Update Helm values.yaml
+        run: |
+          cd helm-dev
           yq eval ".flask.image.tag = \"${{ github.sha }}\"" -i values.yaml
           git config user.name "Sreevas-MK"
           git config user.email "sreevasmk@gmail.com"
