@@ -20,7 +20,7 @@ FROM python:3.11.14-alpine
 
 WORKDIR /flaskapp
 
-# Create non-root user
+# Create a non-root user
 RUN adduser -D flask-user
 
 # Upgrade system packages in final image too
