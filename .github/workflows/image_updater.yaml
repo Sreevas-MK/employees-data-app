@@ -17,6 +17,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Run GitLeaks scan
+        uses: zricethezav/gitleaks-action@v2
+
       - name: Set up Docker
         uses: docker/setup-docker-action@v4
 
