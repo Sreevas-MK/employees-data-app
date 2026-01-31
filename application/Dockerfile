@@ -1,6 +1,9 @@
 # Stage 1: Builder
 FROM python:3.11.14-alpine AS builder
 
+# Upgrade Alpine OS packages to pull latest security patches
+RUN apk update && apk upgrade --no-cache
+
 WORKDIR /install
 
 # Install build dependencies
@@ -12,11 +15,14 @@ COPY ./code/requirements.txt .
 # Upgrade ALL packages to fixed versions FIRST
 RUN pip install --upgrade pip==25.3 wheel==0.46.2 setuptools jaraco.context==6.1.0
 
-# Now install app packages (this ensures jaraco.context stays at 6.1.0)
+# Install app packages (this ensures jaraco.context stays at 6.1.0)
 RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
 
 # Stage 2: Final image
 FROM python:3.11.14-alpine
+
+# Upgrade Alpine OS packages to pull latest security patches
+RUN apk update && apk upgrade --no-cache
 
 WORKDIR /flaskapp
 
