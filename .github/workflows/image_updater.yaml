@@ -30,6 +30,12 @@ jobs:
         run: |
           docker build -t sreevasmk1993/employees-data-app:${{ github.sha }} ./application
 
+      - name: Push Docker image
+        run: |
+          docker tag sreevasmk1993/employees-data-app:${{ github.sha }} sreevasmk1993/employees-data-app:latest
+          docker push sreevasmk1993/employees-data-app:${{ github.sha }}
+          docker push sreevasmk1993/employees-data-app:latest
+
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@0.20.0
         with:
@@ -37,13 +43,6 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: 1
           format: table
-
-      - name: Push Docker image
-        run: |
-          docker tag sreevasmk1993/employees-data-app:${{ github.sha }} sreevasmk1993/employees-data-app:latest
-          docker push sreevasmk1993/employees-data-app:${{ github.sha }}
-          docker push sreevasmk1993/employees-data-app:latest
-
 
       - name: Clone Helm repo for EKS helm charts
         run: |
