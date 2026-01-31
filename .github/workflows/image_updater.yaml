@@ -7,8 +7,7 @@ on:
       - main
     paths:
       - "application/**"
-    paths-ignore:
-      - "application/README.md"
+      - "!application/README.md"
 
 jobs:
   build-and-push:
