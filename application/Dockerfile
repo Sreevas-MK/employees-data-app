@@ -26,7 +26,7 @@ RUN apk update && apk upgrade --no-cache
 
 WORKDIR /flaskapp
 
-# Create a non-root user
+# Create non-root user
 RUN adduser -D flask-user
 
 # Upgrade system packages in final image too
