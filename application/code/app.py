@@ -52,6 +52,10 @@ def init_database():
 
 app = Flask(__name__)
 
+@app.before_first_request
+def initialize_db():
+    init_database()
+
 # ---------------------------
 # Redis Client (for caching)
 # ---------------------------
@@ -152,8 +156,8 @@ if __name__ == '__main__':
         print(f"Error: Missing required environment variables: {', '.join(missing_vars)}", file=sys.stderr)
         sys.exit(1)
 
-    print("Initializing database...")
-    init_database()
+    #print("Initializing database...")
+    #init_database()
 
     hostname = os.getenv('HOSTNAME', None)
     database_host = os.getenv('DATABASE_HOST', None)
