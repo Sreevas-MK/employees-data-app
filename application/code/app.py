@@ -49,12 +49,8 @@ def init_database():
         if db.is_connected():
             db.close()
 
-
+init_database()
 app = Flask(__name__)
-
-@app.before_first_request
-def initialize_db():
-    init_database()
 
 # ---------------------------
 # Redis Client (for caching)
