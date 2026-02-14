@@ -1,92 +1,142 @@
 # GitHub Actions Workflows
 
-This directory contains GitHub Actions workflows used to automate the CI/CD process for the application and its Kubernetes deployment.
+This directory contains GitHub Actions workflows used to automate the secure CI/CD process for the application and its Kubernetes deployments.
 
-The workflows are designed to build Docker images, push them to Docker Hub, and update the Helm repository so that deployments are automatically triggered through GitOps.
+The pipeline performs security scanning, builds Docker images, pushes them to Docker Hub, and updates Helm repositories to trigger GitOps-based deployments via ArgoCD.
 
 ---
 
 ## image_updater.yaml
 
-This workflow builds and pushes a Docker image whenever application source code changes and updates the Helm chart with the new image tag.
+This workflow builds, scans, and pushes a Docker image whenever application source code changes and automatically updates Helm repositories with the new image tag.
 
 ---
 
-### Purpose
+## Purpose
 
-The main goal of this workflow is to automate the following steps:
+The workflow automates the following process:
 
-1. Detect changes in the application source code.
-2. Build a new Docker image using the updated code.
-3. Push the image to Docker Hub with a unique tag.
-4. Update the Helm chart to reference the new image tag.
+1. Detect application source code changes.
+2. Perform secret scanning using GitLeaks.
+3. Build → Scan → Push Docker image securely.
+4. Perform vulnerability scanning using Trivy.
+5. Update Helm repositories with the new image tag.
+6. Trigger automated Kubernetes deployments through ArgoCD GitOps sync.
 
-This enables continuous deployment to Kubernetes through Helm and ArgoCD.
+This ensures that only secure, scanned images are deployed to Kubernetes environments.
 
 ---
 
-### Trigger Conditions
+## Trigger Conditions
 
 The workflow runs only when:
 
-- A push is made to the `main` branch.
-- Files inside the `application/` directory are modified.
+* A push is made to the `main` branch.
+* Files inside the `application/` directory are modified.
 
-The workflow does NOT run when only `application/README.md` is changed.  
-This avoids unnecessary image rebuilds caused by documentation updates.
-
----
-
-### High-Level Flow
-
-1. GitHub Actions checks out the source code.
-2. Docker Buildx is initialized.
-3. The workflow logs in to Docker Hub using GitHub secrets.
-4. A Docker image is built from the `application/` directory.
-5. The image is pushed to Docker Hub with two tags:
-   - `latest`
-   - the current Git commit SHA
-6. The Helm repository is cloned.
-7. The image tag in `values.yaml` is updated to the new commit SHA.
-8. The updated Helm values file is committed and pushed back to the Helm repository.
+The workflow does NOT run when only `application/README.md` is changed to prevent unnecessary builds.
 
 ---
 
-### Docker Image Tags
+## High-Level Flow
 
-Each build produces two image tags:
+1. Checkout application source code.
+2. Run **GitLeaks** to detect exposed secrets.
+3. Build Docker image using commit SHA.
+4. Install and run **Trivy** vulnerability scanning.
+5. Block pipeline if HIGH or CRITICAL vulnerabilities are detected.
+6. Log in to Docker Hub securely using GitHub secrets.
+7. Push Docker images with:
 
-- `latest` for convenience
-- `<git-sha>` for immutable and traceable deployments
+   * immutable SHA tag
+   * latest tag
+8. Clone Helm repositories for:
 
-Using the Git SHA ensures reproducibility and easy rollback.
-
----
-
-### Required Secrets
-
-The following GitHub secrets must be configured for this workflow to function correctly:
-
-- `DOCKER_USERNAME` – Docker Hub username
-- `DOCKER_PASSWORD` – Docker Hub password or access token
-- `ACCESS_TOKEN` – GitHub Personal Access Token with access to the Helm repository
-
----
-
-### Why This Workflow Exists
-
-This workflow separates application delivery from infrastructure code.
-
-- Application code lives in this repository.
-- Kubernetes manifests and Helm charts live in a separate repository.
-- GitHub Actions acts as the bridge between application changes and cluster deployment.
-
-This pattern closely follows real-world GitOps practices used in production environments.
+   * Production EKS cluster
+   * Development cluster
+9. Update image tag in Helm `values.yaml`.
+10. Commit and push updated Helm configuration to trigger GitOps deployment.
 
 ---
 
-### Notes
+## Security Controls Implemented
 
-- Non-YAML files inside `.github/workflows/` are ignored by GitHub Actions.
-- This README exists only for documentation and does not affect workflow execution.
+### Secret Detection – GitLeaks
 
+Scans the repository for:
+
+* Hardcoded credentials
+* Tokens
+* API keys
+* Sensitive configuration leaks
+
+Pipeline fails immediately if secrets are detected.
+
+### Container Vulnerability Scanning – Trivy
+
+Scans Docker images for:
+
+* Known CVEs
+* OS package vulnerabilities
+* Python dependency vulnerabilities
+
+Pipeline fails if HIGH or CRITICAL vulnerabilities are found.
+
+---
+
+## Docker Image Tagging Strategy
+
+Each build generates:
+
+* `<git-sha>` – Immutable versioned image
+* `latest` – Convenience reference
+
+Using SHA-based tagging ensures:
+
+* Immutable deployments
+* Easy rollback
+* Traceable releases
+
+---
+
+## Required GitHub Secrets
+
+The following secrets must be configured:
+
+| Secret          | Purpose                                |
+| --------------- | -------------------------------------- |
+| DOCKER_USERNAME | Docker Hub username                    |
+| DOCKER_PASSWORD | Docker Hub access token                |
+| EKS_HELM_TOKEN  | GitHub token for production Helm repo  |
+| DEV_HELM_TOKEN  | GitHub token for development Helm repo |
+
+---
+
+## GitOps Deployment Model
+
+This workflow does NOT deploy directly to Kubernetes.
+
+Instead:
+
+1. Image is built and pushed.
+2. Helm values repository is updated.
+3. ArgoCD detects Git changes.
+4. ArgoCD synchronizes Kubernetes manifests automatically.
+
+This provides:
+
+* Declarative deployment
+* Auditability
+* Controlled rollouts
+* Infrastructure and application separation
+
+---
+
+## Notes
+
+* Workflow runs only for application changes.
+* Documentation changes do not trigger builds.
+* Security scans execute before image push.
+* Non-YAML files inside `.github/workflows/` are ignored by GitHub Actions.
+
+---

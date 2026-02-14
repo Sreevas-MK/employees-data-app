@@ -43,33 +43,91 @@ application/
 ## Dockerfile Explanation
 
 ```dockerfile
-FROM python:3.11-alpine
+# Stage 1: Builder
+FROM python:3.11.14-alpine AS builder
 
-# Create app directory and user
-RUN mkdir /flaskapp
-RUN adduser -h /flaskapp -s /bin/sh -D -H flask-user
+# Upgrade Alpine OS packages to pull latest security patches
+RUN apk update && apk upgrade --no-cache
+
+WORKDIR /install
+
+# Install build dependencies
+RUN apk add --no-cache gcc musl-dev libffi-dev
+
+# Copy requirements
+COPY ./code/requirements.txt .
+
+# Upgrade ALL packages to fixed versions FIRST
+RUN pip install --upgrade pip==25.3 wheel==0.46.2 setuptools jaraco.context==6.1.0
+
+# Install app packages (this ensures jaraco.context stays at 6.1.0)
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
+
+# Stage 2: Final image
+FROM python:3.11.14-alpine
+
+# Upgrade Alpine OS packages to pull latest security patches
+RUN apk update && apk upgrade --no-cache
 
 WORKDIR /flaskapp
+
+# Create a non-root user
+RUN adduser -D flask-user
+
+# Upgrade system packages in final image too
+RUN pip install --upgrade pip==25.3 wheel==0.46.2 setuptools jaraco.context==6.1.0
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy application code
 COPY ./code/ .
 
-# Install dependencies
-RUN pip3 install --no-cache-dir -r requirements.txt
-
-# Set proper permissions
+# Fix ownership
 RUN chown -R flask-user:flask-user /flaskapp
 
-EXPOSE 3000
 USER flask-user
-
-# Start the Flask app
-CMD ["python3","app.py"]
+EXPOSE 3000
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:3000", "app:app"]
 ```
 
-* Creates a dedicated `flask-user` for security.
-* Copies source code from `code/` folder.
-* Installs Python dependencies.
-* Exposes port 3000 inside the container.
-* Runs Flask as a non-root user.
+### Stage 1: Builder Image
+
+* Uses `python:3.11.14-alpine` as a lightweight base.
+* Updates Alpine system packages to ensure latest security patches.
+* Installs build dependencies:
+
+  * gcc
+  * musl-dev
+  * libffi-dev
+* Upgrades critical Python packaging tools:
+
+  * pip
+  * wheel
+  * setuptools
+  * jaraco.context (pinned to secure version)
+* Installs application dependencies into a temporary directory (`/install`).
+* This stage isolates compilation tools so they are not included in the final runtime image.
+
+### Stage 2: Runtime Image
+
+* Starts from a fresh minimal Alpine Python image.
+* Applies OS security updates again to ensure the runtime layer is patched.
+* Creates a dedicated non-root user (`flask-user`) for secure container execution.
+* Copies only the prebuilt dependencies from the builder stage, reducing image size and attack surface.
+* Copies application source code into `/flaskapp`.
+* Fixes file ownership to ensure the non-root user can run the app.
+* Exposes port `3000`.
+* Runs the application using Gunicorn with 2 workers.
+
+### Security & Optimization Features
+
+* Multi-stage build reduces final image size.
+* No compiler tools present in runtime image.
+* Non-root container execution.
+* Explicit dependency version pinning.
+* OS-level patching in both build and runtime layers.
+* Gunicorn production WSGI server instead of Flask dev server.
 
 ---
 
